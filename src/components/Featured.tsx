@@ -1,4 +1,7 @@
+import { useNavigate } from "react-router-dom";
+
 export default function Featured() {
+  const navigate = useNavigate();
   return (
     <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center min-h-screen px-6 py-12 lg:py-0 bg-white">
       <div className="flex-1 h-[400px] lg:h-[800px] mb-8 lg:mb-0 lg:order-2">
@@ -13,7 +16,10 @@ export default function Featured() {
         <p className="text-2xl lg:text-4xl mb-8 text-neutral-900 leading-tight">
           Сотни проверенных рецептов с подсчётом калорий, КБЖУ и пошаговыми инструкциями. Готовь вкусно, питайся осознанно и чувствуй себя на все 100.
         </p>
-        <button className="bg-black text-white border border-black px-4 py-2 text-sm transition-all duration-300 hover:bg-white hover:text-black cursor-pointer w-fit uppercase tracking-wide">
+        <button
+          onClick={() => navigate("/recipes")}
+          className="bg-black text-white border border-black px-4 py-2 text-sm transition-all duration-300 hover:bg-white hover:text-black cursor-pointer w-fit uppercase tracking-wide"
+        >
           Смотреть рецепты
         </button>
       </div>
