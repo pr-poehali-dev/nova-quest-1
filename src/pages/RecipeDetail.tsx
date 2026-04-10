@@ -1,11 +1,28 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { recipes } from "@/data/recipes";
+import { useState, useEffect } from "react";
+import { recipes as staticRecipes, Recipe } from "@/data/recipes";
 import Icon from "@/components/ui/icon";
+
+const RECIPES_URL = "https://functions.poehali.dev/216eacc5-ff5d-4098-921c-c701944d3b55";
 
 export default function RecipeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const recipe = recipes.find((r) => r.id === Number(id));
+  const [recipe, setRecipe] = useState<Recipe | undefined>(
+    staticRecipes.find((r) => r.id === Number(id))
+  );
+
+  useEffect(() => {
+    if (!recipe && id) {
+      fetch(RECIPES_URL)
+        .then((r) => r.json())
+        .then((data) => {
+          const found = (data.recipes || []).find((r: Recipe) => r.id === id);
+          if (found) setRecipe(found);
+        })
+        .catch(() => {});
+    }
+  }, [id]);
 
   if (!recipe) {
     return (

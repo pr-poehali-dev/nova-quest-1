@@ -1,0 +1,33 @@
+{
+  "tests": [
+    {
+      "name": "GET recipes list",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {"recipes": [{"title": "Тест-рецепт"}]},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "POST new recipe",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "title": "Тест-рецепт",
+        "category": "Завтраки",
+        "time": "10 мин",
+        "calories": 300,
+        "protein": 10,
+        "fat": 5,
+        "carbs": 40,
+        "description": "Тестовое описание",
+        "servings": 1,
+        "ingredients": ["Ингредиент 1"],
+        "steps": ["Шаг 1"]
+      },
+      "expectedStatus": 201,
+      "expectedBody": {"success": true},
+      "bodyMatcher": "partial"
+    }
+  ]
+}
