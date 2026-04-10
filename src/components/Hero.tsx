@@ -19,18 +19,18 @@ export default function Hero() {
         className="absolute inset-0 w-full h-full"
       >
         <img
-          src="/images/mountain-landscape.jpg"
-          alt="Mountain landscape"
+          src="https://cdn.poehali.dev/projects/81a593ec-d3d5-478e-8d20-b52f799fce48/files/473caecb-a5c7-4821-87de-bfcef0a6609f.jpg"
+          alt="Healthy food"
           className="w-full h-full object-cover"
         />
       </motion.div>
 
       <div className="relative z-10 text-center text-white">
         <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6">
-          ОТКРОЙ
+          ЕШЬ ЛУЧШЕ
         </h1>
         <p className="text-lg md:text-xl max-w-2xl mx-auto px-6 opacity-90">
-          Исследуй границы дизайна с иммерсивным параллакс-эффектом
+          Рецепты правильного питания для здоровья, энергии и отличного самочувствия
         </p>
       </div>
     </div>
