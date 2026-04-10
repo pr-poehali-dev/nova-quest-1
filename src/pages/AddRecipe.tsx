@@ -3,12 +3,16 @@ import { useNavigate, Link } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 
 const RECIPES_URL = "https://functions.poehali.dev/216eacc5-ff5d-4098-921c-c701944d3b55";
+const UPLOAD_URL = "https://functions.poehali.dev/d465f8e5-965b-4e7d-b38b-e452d133823a";
 const CATEGORIES = ["Завтраки", "Обеды", "Ужины", "Перекусы"];
 
 export default function AddRecipe() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string>("");
+  const [imageUploading, setImageUploading] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
@@ -44,6 +48,33 @@ export default function AddRecipe() {
   const removeItem = (list: string[], setList: (v: string[]) => void, index: number) =>
     setList(list.filter((_, i) => i !== index));
 
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const base64 = (ev.target?.result as string).split(',')[1];
+      setImagePreview(ev.target?.result as string);
+      setImageUploading(true);
+      try {
+        const res = await fetch(UPLOAD_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64, contentType: file.type }),
+        });
+        const data = await res.json();
+        if (res.ok) setImageUrl(data.url);
+        else setError('Ошибка загрузки фото');
+      } catch {
+        setError('Ошибка загрузки фото');
+      } finally {
+        setImageUploading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -63,6 +94,7 @@ export default function AddRecipe() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
+          image: imageUrl,
           calories: Number(form.calories),
           protein: Number(form.protein),
           fat: Number(form.fat),
@@ -105,6 +137,37 @@ export default function AddRecipe() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-10">
           <div className="flex flex-col gap-4">
             <h2 className="text-xs uppercase tracking-widest text-neutral-400">Основное</h2>
+
+            <div>
+              <label className="text-xs text-neutral-400 uppercase tracking-wide mb-2 block">Фото блюда</label>
+              <label className="cursor-pointer block">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
+                {imagePreview ? (
+                  <div className="relative h-56 overflow-hidden">
+                    <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
+                    {imageUploading && (
+                      <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                        <span className="text-sm text-neutral-500 uppercase tracking-wide">Загружаю...</span>
+                      </div>
+                    )}
+                    <div className="absolute bottom-3 right-3 bg-black text-white text-xs px-3 py-1 uppercase tracking-wide">
+                      Изменить фото
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-56 border border-dashed border-neutral-200 flex flex-col items-center justify-center gap-3 hover:border-neutral-400 transition-colors">
+                    <Icon name="ImagePlus" size={32} className="text-neutral-300" />
+                    <span className="text-sm text-neutral-400 uppercase tracking-wide">Загрузить фото</span>
+                  </div>
+                )}
+              </label>
+            </div>
+
             <input
               required
               placeholder="Название рецепта"
@@ -240,7 +303,7 @@ export default function AddRecipe() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || imageUploading}
             className="bg-black text-white border border-black px-8 py-4 text-sm uppercase tracking-wide transition-all duration-300 hover:bg-white hover:text-black disabled:opacity-50 disabled:cursor-not-allowed w-fit"
           >
             {loading ? "Сохраняю..." : "Опубликовать рецепт"}
