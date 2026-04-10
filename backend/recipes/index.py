@@ -1,11 +1,11 @@
-"""Получение и сохранение рецептов пользователей из базы данных."""
+"""Получение, сохранение, обновление и удаление рецептов пользователей."""
 import json
 import os
 import psycopg2
 
 CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
 }
 
@@ -95,5 +95,45 @@ def handler(event: dict, context) -> dict:
             'headers': CORS_HEADERS,
             'body': json.dumps({'id': f'user_{new_id}', 'success': True}, ensure_ascii=False),
         }
+
+    if method == 'PUT':
+        path = event.get('path', '/')
+        recipe_id = path.strip('/').split('/')[-1]
+        if not recipe_id.isdigit():
+            return {'statusCode': 400, 'headers': CORS_HEADERS, 'body': json.dumps({'error': 'Неверный id'})}
+
+        body = json.loads(event.get('body') or '{}')
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE recipes SET
+                title=%s, category=%s, time=%s, calories=%s, protein=%s,
+                fat=%s, carbs=%s, image=%s, description=%s, servings=%s,
+                ingredients=%s, steps=%s
+            WHERE id=%s
+        """, (
+            body['title'], body['category'], body['time'],
+            int(body['calories']), int(body['protein']), int(body['fat']), int(body['carbs']),
+            body.get('image', ''), body['description'], int(body['servings']),
+            body['ingredients'], body['steps'], int(recipe_id),
+        ))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': json.dumps({'success': True})}
+
+    if method == 'DELETE':
+        path = event.get('path', '/')
+        recipe_id = path.strip('/').split('/')[-1]
+        if not recipe_id.isdigit():
+            return {'statusCode': 400, 'headers': CORS_HEADERS, 'body': json.dumps({'error': 'Неверный id'})}
+
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM recipes WHERE id=%s", (int(recipe_id),))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': json.dumps({'success': True})}
 
     return {'statusCode': 405, 'headers': CORS_HEADERS, 'body': json.dumps({'error': 'Method not allowed'})}

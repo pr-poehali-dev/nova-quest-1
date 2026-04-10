@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { recipes as staticRecipes, Recipe } from "@/data/recipes";
 import Icon from "@/components/ui/icon";
 
+const isUserRecipe = (id: string | undefined) => id?.startsWith("user_");
+
 const RECIPES_URL = "https://functions.poehali.dev/216eacc5-ff5d-4098-921c-c701944d3b55";
 
 export default function RecipeDetail() {
@@ -11,6 +13,16 @@ export default function RecipeDetail() {
   const [recipe, setRecipe] = useState<Recipe | undefined>(
     staticRecipes.find((r) => r.id === Number(id))
   );
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const handleDelete = async () => {
+    if (!confirmDelete) { setConfirmDelete(true); return; }
+    setDeleting(true);
+    const numericId = id?.replace("user_", "");
+    await fetch(`${RECIPES_URL}/${numericId}`, { method: "DELETE" });
+    navigate("/recipes");
+  };
 
   useEffect(() => {
     if (!recipe && id) {
@@ -44,7 +56,28 @@ export default function RecipeDetail() {
             <Icon name="ArrowLeft" size={18} />
             <span className="text-sm uppercase tracking-wide">Рецепты</span>
           </button>
-          <span className="text-xs uppercase tracking-wide text-neutral-400">{recipe.category}</span>
+          <div className="flex items-center gap-4">
+            {isUserRecipe(id) && (
+              <>
+                <button
+                  onClick={() => navigate(`/recipes/edit/${id}`)}
+                  className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-neutral-500 hover:text-neutral-900 transition-colors"
+                >
+                  <Icon name="Pencil" size={14} />
+                  Редактировать
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className={`flex items-center gap-1.5 text-xs uppercase tracking-wide transition-colors ${confirmDelete ? "text-red-500 hover:text-red-700" : "text-neutral-400 hover:text-red-500"}`}
+                >
+                  <Icon name="Trash2" size={14} />
+                  {confirmDelete ? "Подтвердить" : "Удалить"}
+                </button>
+              </>
+            )}
+            <span className="text-xs uppercase tracking-wide text-neutral-400">{recipe.category}</span>
+          </div>
         </div>
       </header>
 
